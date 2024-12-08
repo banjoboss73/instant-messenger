@@ -1,9 +1,18 @@
 import socket
 import threading
+import sys
+
+# get the port number from the command line arguments
+if len(sys.argv) != 2:
+    print("Usage: python3 server.py <port>")
+    sys.exit(1)
+
+port = int(sys.argv[1])
 
 # create a socket for the server
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.bind(('127.0.0.1', 12001))
+# bind the server to the address
+server.bind(('0.0.0.0', port))
 
 # start listening for connections
 server.listen()
