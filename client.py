@@ -1,14 +1,20 @@
 import socket
 import threading
+import sys
 
-# prompt the user to choose a username
-username = input("Choose a username: ")
+# get the username, hostname, and port number from the command line arguments
+if len(sys.argv) != 4:
+    print("Usage: python3 client.py <username> <hostname> <port>")
+    sys.exit(1)
+
+username = sys.argv[1]
+hostname = sys.argv[2]
+port = int(sys.argv[3])
 
 # create a socket object
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  
-
 # connect to the server
-client.connect(('127.0.0.1', 12001))
+client.connect((hostname, port))
 
 def receive():
     while True:
