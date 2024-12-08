@@ -86,7 +86,7 @@ def receive():
         print(f'Username of the client is {username}')
         # broadcast that the client has joined
         broadcast(f'{username} joined the chat!'.encode('ascii'))
-        client.send('Connected to the server!'.encode('ascii'))
+        client.send('Welcome to the server!'.encode('ascii'))
 
         # create a thread for the new client
         thread = threading.Thread(target=handle, args=(client,))
