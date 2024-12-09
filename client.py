@@ -16,7 +16,10 @@ client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # connect to the server
 client.connect((hostname, port))
 
+is_quitting = False
 def receive():
+    # use the global variable is_quitting to indicate if the user is leaving
+    global is_quitting
     while True:
         try:
             # receive messages from the server
@@ -24,23 +27,37 @@ def receive():
             if message == 'NICK':
                 # send the username to the server
                 client.send(username.encode('ascii'))
+            elif message == '/quit':
+                # Thank the user for using the server
+                print('Goodbye! Come again soon.')
+                client.close()
             else:
                 # print the message
                 print(message)
         except:
-            # close the connection if an error occurs
-            print("An error occurred!")
-            client.close()
+            if not is_quitting:    
+                # close the connection if an error occurs
+                print("An error occurred!")
+                client.close()
             break
 
 def write():
+    global is_quitting
     while True:
         # get user input for the message
         message = input("")
         if message.startswith('@'):
             # send unicast message if it starts with '@'
             client.send(message.encode('ascii'))
+        elif message == "/quit":
+            # send a message to the server indicating the user is leaving
+            client.send(f'{username} has left'.encode('ascii'))
+            # set the is_quitting flag to True
+            is_quitting = True
+            client.close()
+            break
         else:
+            # send broadcast message
             client.send(f'{username}: {message}'.encode('ascii'))
 
 # create two threads for receiving and writing messages

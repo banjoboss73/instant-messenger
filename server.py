@@ -49,12 +49,28 @@ def handle(client):
             if message.decode('ascii').startswith('@'):
                 # broadcast unicast messages
                 broadcast(message, client)
+            elif message.decode('ascii') == "/quit":
+                # remove the client if they want to leave
+                index = clients.index(client)
+                # remove the client and close the connection
+                clients.remove(client)
+                client.close()
+                # get the username of the client
+                username = usernames[index]
+                # broadcast that the client has left
+                broadcast(f'{username} has left'.encode('ascii'))
+                # remove the username from the list
+                usernames.remove(username)
+                # remove the connection from the dictionary
+                del user_connections[username]
+                break
             else:
                 # broadcast the message to all clients
                 broadcast(message, client)
         except:
             # remove the client if an error occurs
             index = clients.index(client)
+            #
             # remove the client and close the connection
             clients.remove(client)
             client.close()
