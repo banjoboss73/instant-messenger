@@ -31,7 +31,7 @@ def broadcast(message, sender=None):
         msg = message.split(' ', 1)[1]
         if recipient in user_connections:
             # sends message to the chosen recipient
-            user_connections[recipient].send(f'{usernames[clients.index(sender)]}: {msg}'.encode('ascii'))
+            user_connections[recipient].send(f'{usernames[clients.index(sender)]} to you: {msg}'.encode('ascii'))
             if sender:
                 # sends a confirmation of the message to the sender
                 sender.send(f'You to {recipient}: {msg}'.encode('ascii'))
