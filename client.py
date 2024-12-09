@@ -13,8 +13,15 @@ port = int(sys.argv[3])
 
 # create a socket object
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  
-# connect to the server
-client.connect((hostname, port))
+try:
+    # connect to the server
+    client.connect((hostname, port))
+except socket.gaierror:
+    print(f"Error: Hostname '{hostname}' is unavailable. Please check the hostname and try again.")
+    sys.exit(1)
+except ConnectionRefusedError:
+    print(f"Error: Connection to {hostname} on port {port} refused. Please check the port and try again.")
+    sys.exit(1)
 
 is_quitting = False
 def receive():
