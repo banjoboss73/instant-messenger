@@ -7,15 +7,24 @@ if len(sys.argv) != 2:
     print("Usage: python3 server.py <port>")
     sys.exit(1)
 
-port = int(sys.argv[1])
+try:
+    port = int(sys.argv[1])
+except ValueError:
+    print("Error: Port number must be an integer.")
+    sys.exit(1)
 
-# create a socket for the server
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# bind the server to the address
-server.bind(('0.0.0.0', port))
+try:
+    # create a socket for the server
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # bind the server to the address
+    server.bind(('0.0.0.0', port))
 
-# start listening for connections
-server.listen()
+    server.listen()
+    print(f"Server started on port {port}")
+except Exception as e:
+    print(f"An error occurred: {e}")
+    sys.exit(1)
+    
 
 # lists to keep track of clients and their usernames
 clients = []
@@ -107,6 +116,12 @@ def receive():
         # create a thread for the new client
         thread = threading.Thread(target=handle, args=(client,))
         thread.start()
-
-print(f"Server is listening on port {port}")
-receive()
+try:
+    receive()
+except Exception as e:
+    print(f"Server crashed: {e}")
+    broadcast('Server is shutting down due to an error.'.encode('ascii'))
+    for client in clients:
+        client.close()
+    server.close()
+    sys.exit(1)
