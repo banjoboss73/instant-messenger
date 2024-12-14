@@ -1,6 +1,7 @@
 import socket
 import threading
 import sys
+import os
 
 # get the port number from the command line arguments
 if len(sys.argv) != 2:
@@ -30,6 +31,7 @@ except Exception as e:
 clients = []
 usernames = []
 user_connections = {}
+shared_files_dir = os.getenv('SERVER_SHARED_FILES', 'SharedFiles')
 
 def broadcast(message, sender=None):
     # decode the message from bytes to string
@@ -55,41 +57,67 @@ def handle(client):
         try:
             # receive messages from the client
             message = client.recv(1024)
+            # if the message starts with '@', it is a unicast message
             if message.decode('ascii').startswith('@'):
-                # broadcast unicast messages
                 broadcast(message, client)
+            # if the message is '/quit', the client is leaving
             elif message.decode('ascii') == "/quit":
-                # remove the client if they want to leave
                 index = clients.index(client)
-                # remove the client and close the connection
                 clients.remove(client)
                 client.close()
-                # get the username of the client
                 username = usernames[index]
                 # broadcast that the client has left
                 broadcast(f'{username} has left'.encode('ascii'))
-                # remove the username from the list
                 usernames.remove(username)
                 # remove the connection from the dictionary
                 del user_connections[username]
                 break
+            # if the message is 'LIST_FILES', list the files in the shared directory
+            elif message.decode('ascii') == 'LIST_FILES':
+                files = os.listdir(shared_files_dir)
+                # if there are no files in the directory, send a message to the client
+                if not files:
+                    client.send('No files available'.encode('ascii'))
+                    continue
+                else:
+                    if len(files) == 1:
+                        # if there is only one file, send the file name to the client
+                        client.send(f'There is 1 file available:\n{files}'.encode('ascii'))
+                    else:
+                        # seperate the files with a comma
+                        client.send(('There are ' + str(len(files)) + ' files available\n' + str(', '.join(files))).encode('ascii'))
+            # if the message starts with 'DOWNLOAD_FILE', send the file to the client
+            elif message.decode('ascii').startswith('DOWNLOAD_FILE'):
+                filename = message.decode('ascii').split(' ')[1]
+                filepath = os.path.join(shared_files_dir, filename)
+                filesize = os.path.getsize(filepath)
+                try:
+                    # send file size to the client
+                    client.send(f"SUCCESS {filename} {filesize}".encode('ascii'))
+
+                    # open file and send it to the client
+                    with open(filepath, 'rb') as file:
+                        bytes_read = file.read(1024)
+                        while bytes_read:
+                            client.send(bytes_read)
+                            bytes_read = file.read(1024)
+
+                # if the file is not found, send an error message to the client
+                except FileNotFoundError:
+                    client.send(f"ERROR {filename} not found. Choose another file which exists".encode('ascii'))
             else:
                 # broadcast the message to all clients
                 broadcast(message, client)
         except:
             # remove the client if an error occurs
             index = clients.index(client)
-            #
-            # remove the client and close the connection
             clients.remove(client)
             client.close()
-            # get the username of the client
             username = usernames[index]
             # broadcast that the client has left
             broadcast(f'{username} has left'.encode('ascii'))
             # remove the username from the list
             usernames.remove(username)
-            # remove the connection from the dictionary
             del user_connections[username]
             break
 

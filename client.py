@@ -1,6 +1,7 @@
 import socket
 import threading
 import sys
+import os
 
 # get the username, hostname, and port number from the command line arguments
 if len(sys.argv) != 4:
@@ -59,10 +60,34 @@ def write():
         elif message == "/quit":
             # send a message to the server indicating the user is leaving
             client.send(f'{username} has left'.encode('ascii'))
-            # set the is_quitting flag to True
             is_quitting = True
             client.close()
             break
+        # prevent user from sending empty messages
+        elif message == "":
+            continue
+        elif message == 'LIST_FILES':
+            client.send(message.encode('ascii'))
+        elif message.startswith('DOWNLOAD_FILE'):
+            client.send(message.encode('ascii'))
+            filename = message.split(' ')[1]
+            response = client.recv(1024).decode('ascii')
+            if response.startswith('FILE_SIZE'):
+                filesize = int(response.split(' ')[1])
+                os.makedirs(username, exist_ok=True)
+                filepath = os.path.join(username, filename)
+                with open(filepath, 'wb') as f:
+                    bytes_received = 0
+                    while bytes_received < filesize:
+                        chunk = client.recv(1024)
+                        if not chunk:
+                            break
+                        f.write(chunk)
+                        bytes_received += len(chunk)
+                print(f"Downloaded {filename} ({filesize} bytes)")
+            else:
+                print(response)
+            
         else:
             # send broadcast message
             client.send(f'{username}: {message}'.encode('ascii'))
