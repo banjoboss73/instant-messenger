@@ -67,27 +67,7 @@ def write():
         elif message == "":
             continue
         elif message == 'LIST_FILES':
-            client.send(message.encode('ascii'))
-        elif message.startswith('DOWNLOAD_FILE'):
-            client.send(message.encode('ascii'))
-            filename = message.split(' ')[1]
-            response = client.recv(1024).decode('ascii')
-            if response.startswith('FILE_SIZE'):
-                filesize = int(response.split(' ')[1])
-                os.makedirs(username, exist_ok=True)
-                filepath = os.path.join(username, filename)
-                with open(filepath, 'wb') as f:
-                    bytes_received = 0
-                    while bytes_received < filesize:
-                        chunk = client.recv(1024)
-                        if not chunk:
-                            break
-                        f.write(chunk)
-                        bytes_received += len(chunk)
-                print(f"Downloaded {filename} ({filesize} bytes)")
-            else:
-                print(response)
-            
+            client.send(message.encode('ascii'))           
         else:
             # send broadcast message
             client.send(f'{username}: {message}'.encode('ascii'))

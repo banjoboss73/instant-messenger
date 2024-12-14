@@ -82,29 +82,10 @@ def handle(client):
                 else:
                     if len(files) == 1:
                         # if there is only one file, send the file name to the client
-                        client.send(f'There is 1 file available:\n{files}'.encode('ascii'))
+                        client.send(f'There is 1 file available\n{files[0]}'.encode('ascii'))
                     else:
                         # seperate the files with a comma
                         client.send(('There are ' + str(len(files)) + ' files available\n' + str(', '.join(files))).encode('ascii'))
-            # if the message starts with 'DOWNLOAD_FILE', send the file to the client
-            elif message.decode('ascii').startswith('DOWNLOAD_FILE'):
-                filename = message.decode('ascii').split(' ')[1]
-                filepath = os.path.join(shared_files_dir, filename)
-                filesize = os.path.getsize(filepath)
-                try:
-                    # send file size to the client
-                    client.send(f"SUCCESS {filename} {filesize}".encode('ascii'))
-
-                    # open file and send it to the client
-                    with open(filepath, 'rb') as file:
-                        bytes_read = file.read(1024)
-                        while bytes_read:
-                            client.send(bytes_read)
-                            bytes_read = file.read(1024)
-
-                # if the file is not found, send an error message to the client
-                except FileNotFoundError:
-                    client.send(f"ERROR {filename} not found. Choose another file which exists".encode('ascii'))
             else:
                 # broadcast the message to all clients
                 broadcast(message, client)
